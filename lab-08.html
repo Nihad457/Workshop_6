@@ -385,19 +385,63 @@ glimpse(email)</code></pre>
 ## $ exclaim_mess &lt;dbl&gt; 0, 1, 6, 48, 1, 1, 1, 18, 1, 0, 2, 1, 0, 10, 4, 10, 20, 0…
 ## $ number       &lt;fct&gt; big, small, small, small, none, none, big, small, small, …</code></pre>
 <ol style="list-style-type: decimal">
-<li><p>What proportion of emails are spam? Calculate the proportion of
-spam separately for emails with and without the word “winner”.</p></li>
-<li><p>Fit a logistic regression of <code>spam</code> on
+<li>What proportion of emails are spam? Calculate the proportion of spam
+separately for emails with and without the word “winner”.</li>
+</ol>
+<pre class="r"><code>#with winner
+
+email %&gt;%
+  filter(winner == &quot;yes&quot;) %&gt;%
+  group_by(spam) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 2 × 2
+## # Groups:   spam [2]
+##   spam      n
+##   &lt;fct&gt; &lt;int&gt;
+## 1 0        44
+## 2 1        20</code></pre>
+<pre class="r"><code>email %&gt;%
+  filter(winner == &quot;no&quot;) %&gt;%
+  group_by(spam) %&gt;%
+  count()</code></pre>
+<pre><code>## # A tibble: 2 × 2
+## # Groups:   spam [2]
+##   spam      n
+##   &lt;fct&gt; &lt;int&gt;
+## 1 0      3510
+## 2 1       347</code></pre>
+<p>with winnner = 68.75% without winner = 91%</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Fit a logistic regression of <code>spam</code> on
 <code>winner</code> and write down the fitted model. Use
 <code>predict(..., type = &quot;prob&quot;)</code> to find the predicted
 probability of spam for each group. Compare them with your previously
-calculated proportions.</p></li>
-<li><p>How about fitting a logistic regression of <code>spam</code> on
+calculated proportions.</li>
+</ol>
+<pre class="r"><code>email_train &lt;- email
+email_test &lt;- email
+
+email_rec &lt;- recipe(spam ~ winner, data = email_train)
+
+email_mod &lt;- logistic_reg() %&gt;%
+  set_engine(&quot;glm&quot;)
+
+email_wflow &lt;- workflow() %&gt;%
+  add_recipe(email_rec) %&gt;%
+  add_model(email_mod)
+
+email_fit &lt;- email_wflow %&gt;%
+  fit(data = email_test)
+
+email_pred &lt;- predict(email_fit, email_test, type = &quot;prob&quot;) %&gt;%
+  bind_cols(email_test)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>How about fitting a logistic regression of <code>spam</code> on
 <code>winner</code> and <code>num_char</code>? Calculate the confusion
 matrix of the fitted logistic model on this new model, and compare with
 the confusion matrix result of the previous model, relying on
 <code>winner</code> only. Explain the differences on confusion
-matrix.</p></li>
+matrix.</li>
 </ol>
 <p><strong>Hint:</strong> <code>augment()</code> adds the predicted
 class (<code>.pred_class</code>) to the data. It labels an email as spam

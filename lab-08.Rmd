@@ -20,7 +20,47 @@ glimpse(email)
 
 1. What proportion of emails are spam? Calculate the proportion of spam separately for emails with and without the word “winner”.
 
+```{r}
+#with winner
+
+email %>%
+  filter(winner == "yes") %>%
+  group_by(spam) %>%
+  count()
+
+email %>%
+  filter(winner == "no") %>%
+  group_by(spam) %>%
+  count()
+
+
+```
+with winnner = 68.75%
+without winner = 91%
+
 2. Fit a logistic regression of `spam` on `winner` and write down the fitted model. Use `predict(..., type = "prob")` to find the predicted probability of spam for each group. Compare them with your previously calculated proportions.  
+
+```{r}
+
+email_train <- email
+email_test <- email
+
+email_rec <- recipe(spam ~ winner, data = email_train)
+
+email_mod <- logistic_reg() %>%
+  set_engine("glm")
+
+email_wflow <- workflow() %>%
+  add_recipe(email_rec) %>%
+  add_model(email_mod)
+
+email_fit <- email_wflow %>%
+  fit(data = email_test)
+
+email_pred <- predict(email_fit, email_test, type = "prob") %>%
+  bind_cols(email_test)
+```
+
 
 3. How about fitting a logistic regression of `spam` on `winner` and `num_char`? Calculate the confusion matrix of the fitted logistic model on this new model, and compare with the confusion matrix result of the previous model, relying on `winner` only. Explain the differences on confusion matrix.
 
